@@ -33,6 +33,7 @@ const POWER_BTN = { x: 338, y: BASE_H - 28, r: 24 };
 //   gun    : 총알 발사      (즉시, maxCooldown ms 쿨다운)
 //   eat    : 먹기/뱉기      (eat mode → 흡수 → 뱉기, cooldown은 먹은 후 시작)
 //   shield : 방어막          (maxActive ms 동안, cooldown 후 재사용)
+//   divine : 모든 똥 위로 상승 + 8초 생성 금지 (cooldown 15초)
 const CHARACTERS = [
   {
     emoji: '👩',   name: '여자 1',   label: '활발한 여자',
@@ -50,18 +51,18 @@ const CHARACTERS = [
     emoji: '👨‍🦱', name: '남자 2',   label: '곱슬머리 남자',
     power: { type: 'shield', name: '방어막', icon: '🛡️', maxActive: 5000, maxCooldown: 15000 }
   },
-  { emoji: '🧒', name: '아이',     label: '귀여운 꼬마',           power: null },
-  { emoji: '🧑', name: '어른',     label: '평범한 어른',           power: null },
-  { emoji: '👴', name: '할아버지', label: '지혜로운 노인',         power: null },
-  { emoji: '😇', name: 'God',      label: '신은 피할 수 있을까?',  power: null },
+  {
+    emoji: '😇', name: 'God', label: '신은 피할 수 있을까?',
+    power: { type: 'divine', name: '신의 가호', icon: '✨', maxActive: 8000, maxCooldown: 15000 }
+  },
 ];
 
-const COLS = 4;
-const ROWS = 2;
-const CELL_W = 80;
+const COLS = 5;
+const ROWS = 1;
+const CELL_W = 70;
 const CELL_H = 90;
-const GRID_X = (BASE_W - COLS * CELL_W) / 2;
-const GRID_Y = 200;
+const GRID_X = (BASE_W - COLS * CELL_W) / 2;  // = 25
+const GRID_Y = 230;
 
 // ─── State ──────────────────────────────────────────────────────
 const STATES = { MENU: 'MENU', CHARACTER_SELECT: 'CHARACTER_SELECT', PLAYING: 'PLAYING', GAME_OVER: 'GAME_OVER' };
@@ -87,6 +88,7 @@ let powerState = {
   eatMode:     false,  // 남자1: eating window open
   eatModeTime: 0,      // remaining eat-window ms
   storedPoops: 0,      // 남자1: absorbed poop count (max 3)
+  noSpawnTime: 0,      // divine: no-spawn + ascending window ms
 };
 
 const keys = {};
@@ -119,7 +121,7 @@ function initGame() {
   flashFrames    = 0;
   floatingTexts  = [];
   particles      = [];
-  powerState = { cooldown: 0, isActive: false, activeTime: 0, eatMode: false, eatModeTime: 0, storedPoops: 0 };
+  powerState = { cooldown: 0, isActive: false, activeTime: 0, eatMode: false, eatModeTime: 0, storedPoops: 0, noSpawnTime: 0 };
 }
 
 // ─── Spawn ───────────────────────────────────────────────────────
@@ -189,6 +191,21 @@ function activatePower() {
     return;
   }
 
+  // divine: independent check
+  if (power.type === 'divine') {
+    if (powerState.cooldown > 0 || powerState.noSpawnTime > 0) return;
+    // All poops fly back upward
+    for (const p of poops) {
+      p.ascending  = true;
+      p.speed      = -(5 + Math.random() * 5);
+      p.wobbleAmp  = 4;
+    }
+    powerState.noSpawnTime = power.maxActive;
+    addFloatingText(BASE_W / 2, GROUND_Y / 2 - 20, '✨ 신의 가호!', '#FFD700');
+    spawnParticles(BASE_W / 2, GROUND_Y / 2, ['#FFD700', '#FFFFFF', '#FFA500', '#FFFFAA']);
+    return;
+  }
+
   // For all other types: check cooldown and not-already-active
   if (powerState.cooldown > 0 || powerState.isActive) return;
 
@@ -239,6 +256,14 @@ function updatePower(dt) {
     }
   }
 
+  // Divine: no-spawn countdown → then start cooldown
+  if (powerState.noSpawnTime > 0) {
+    powerState.noSpawnTime = Math.max(0, powerState.noSpawnTime - dt);
+    if (powerState.noSpawnTime === 0 && power?.type === 'divine') {
+      powerState.cooldown = power.maxCooldown;
+    }
+  }
+
   // Eat mode window timer
   if (powerState.eatMode) {
     powerState.eatModeTime -= dt;
@@ -263,7 +288,7 @@ function updatePlayer() {
 
 function updateSpawnAndDifficulty(dt) {
   spawnTimer += dt;
-  if (spawnTimer >= spawnInterval) {
+  if (spawnTimer >= spawnInterval && powerState.noSpawnTime <= 0) {
     spawnTimer = 0;
     spawnPoop();
     if (spawnInterval < 500 && Math.random() < 0.3) {
@@ -285,6 +310,15 @@ function updatePoops() {
 
   for (let i = poops.length - 1; i >= 0; i--) {
     const p = poops[i];
+
+    if (p.ascending) {
+      // Divine: fly upward and disappear
+      p.y      += p.speed;
+      p.wobble += 0.15;
+      p.x      += Math.sin(p.wobble) * p.wobbleAmp * 0.4;
+      if (p.y < -POOP_SIZE) { poops.splice(i, 1); }
+      continue; // skip collision
+    }
 
     if (!isFrozen) {
       p.y += p.speed;
@@ -563,21 +597,36 @@ function renderGame() {
   for (const p of poops) {
     ctx.save();
     ctx.translate(p.x, p.y);
-    ctx.rotate(p.rotation + Math.sin(p.wobble * 0.5) * 0.15);
-    if (isFrozen) ctx.globalAlpha = 0.65;
-    ctx.font = `${POOP_SIZE}px serif`;
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText('💩', 0, 0);
-    if (isFrozen) {
-      ctx.globalAlpha = 1;
-      ctx.font = '13px serif';
-      ctx.fillText('❄️', POOP_SIZE * 0.4, -POOP_SIZE * 0.4);
-    }
-    if (p.isFast && !isFrozen) {
-      ctx.font = '10px serif';
-      ctx.fillStyle = 'red';
-      ctx.fillText('🔥', POOP_SIZE * 0.4, -POOP_SIZE * 0.4);
+
+    if (p.ascending) {
+      // Divine: spinning upward with golden glow
+      ctx.rotate(Date.now() * 0.008 + p.wobble);
+      ctx.shadowColor = '#FFD700';
+      ctx.shadowBlur  = 18;
+      ctx.font = `${POOP_SIZE}px serif`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('💩', 0, 0);
+      ctx.shadowBlur = 0;
+      ctx.font = '12px serif';
+      ctx.fillText('✨', POOP_SIZE * 0.45, -POOP_SIZE * 0.45);
+    } else {
+      ctx.rotate(p.rotation + Math.sin(p.wobble * 0.5) * 0.15);
+      if (isFrozen) ctx.globalAlpha = 0.65;
+      ctx.font = `${POOP_SIZE}px serif`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('💩', 0, 0);
+      if (isFrozen) {
+        ctx.globalAlpha = 1;
+        ctx.font = '13px serif';
+        ctx.fillText('❄️', POOP_SIZE * 0.4, -POOP_SIZE * 0.4);
+      }
+      if (p.isFast && !isFrozen) {
+        ctx.font = '10px serif';
+        ctx.fillStyle = 'red';
+        ctx.fillText('🔥', POOP_SIZE * 0.4, -POOP_SIZE * 0.4);
+      }
     }
     ctx.restore();
   }
@@ -692,12 +741,14 @@ function renderPowerButton() {
     return;
   }
 
-  const onCooldown = powerState.cooldown > 0;
-  const isActive   = powerState.isActive;
+  const onCooldown  = powerState.cooldown > 0;
+  const isActive    = powerState.isActive;
+  const isDivineOn  = power.type === 'divine' && powerState.noSpawnTime > 0;
+  const anyActive   = isActive || isDivineOn;
 
   // Base color
   let baseColor = '#152e6e';
-  if (isActive)           baseColor = '#0a4a2e';
+  if (anyActive)          baseColor = isDivineOn ? '#3a2a00' : '#0a4a2e';
   if (powerState.eatMode) baseColor = '#0a4a1e';
   if (onCooldown)         baseColor = '#2a2a3a';
 
@@ -705,7 +756,8 @@ function renderPowerButton() {
   ctx.beginPath(); ctx.arc(bx, by, br, 0, Math.PI * 2); ctx.fill();
 
   // Border
-  const borderColor = isActive           ? '#00FFAA'
+  const borderColor = isDivineOn         ? '#FFD700'
+                    : isActive           ? '#00FFAA'
                     : powerState.eatMode ? '#00FF88'
                     : onCooldown         ? '#444455'
                     :                      '#4488FF';
@@ -727,11 +779,28 @@ function renderPowerButton() {
   // Active-duration arc (outside ring, shrinks as time remaining decreases)
   if (isActive && power.maxActive > 0) {
     const ratio = powerState.activeTime / power.maxActive;
-    ctx.strokeStyle = isActive && power.type === 'shield' ? '#00FFFF' : '#88CCFF';
+    ctx.strokeStyle = power.type === 'shield' ? '#00FFFF' : '#88CCFF';
     ctx.lineWidth   = 3;
     ctx.beginPath();
     ctx.arc(bx, by, br + 4, -Math.PI / 2, -Math.PI / 2 + ratio * Math.PI * 2);
     ctx.stroke();
+  }
+  // Divine active arc
+  if (isDivineOn) {
+    const ratio = powerState.noSpawnTime / power.maxActive;
+    ctx.strokeStyle = '#FFD700';
+    ctx.lineWidth   = 3;
+    ctx.beginPath();
+    ctx.arc(bx, by, br + 4, -Math.PI / 2, -Math.PI / 2 + ratio * Math.PI * 2);
+    ctx.stroke();
+    // Pulsing glow
+    ctx.save();
+    ctx.globalAlpha = 0.15 + Math.sin(Date.now() / 120) * 0.1;
+    ctx.fillStyle = '#FFD700';
+    ctx.beginPath();
+    ctx.arc(bx, by, br, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
   }
 
   // Icon (changes based on eat state)
@@ -759,7 +828,8 @@ function renderPowerButton() {
   ctx.font = '8px monospace'; ctx.textAlign = 'center'; ctx.textBaseline = 'top';
   ctx.fillStyle = 'rgba(200,200,200,0.7)';
   let label = power.name;
-  if (power.type === 'eat') label = powerState.storedPoops > 0 ? '뱉기' : (powerState.eatMode ? '대기중' : '먹기');
+  if (power.type === 'eat')    label = powerState.storedPoops > 0 ? '뱉기' : (powerState.eatMode ? '대기중' : '먹기');
+  if (power.type === 'divine') label = isDivineOn ? '가호중' : power.name;
   ctx.fillText(label, bx, by + br + 2);
 
   // Key hint
