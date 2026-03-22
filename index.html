@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Games</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #1a1a2e;
+      color: #fff;
+      font-family: monospace;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 20px;
+    }
+    h1 { font-size: 2rem; color: #FFD700; margin-bottom: 8px; }
+    p  { color: rgba(255,255,255,0.5); margin-bottom: 48px; font-size: 0.9rem; }
+    .games { display: flex; flex-wrap: wrap; gap: 24px; justify-content: center; }
+    .card {
+      background: rgba(255,255,255,0.05);
+      border: 2px solid rgba(255,255,255,0.1);
+      border-radius: 16px;
+      padding: 32px 28px;
+      text-align: center;
+      text-decoration: none;
+      color: #fff;
+      width: 180px;
+      transition: transform 0.15s, border-color 0.15s;
+    }
+    .card:hover { transform: translateY(-4px); border-color: #FFD700; }
+    .card .icon { font-size: 3rem; display: block; margin-bottom: 12px; }
+    .card .name { font-size: 1rem; font-weight: bold; color: #FFD700; }
+    .card .desc { font-size: 0.75rem; color: rgba(255,255,255,0.5); margin-top: 6px; }
+  </style>
+</head>
+<body>
+  <h1>🎮 Games</h1>
+  <p>클릭해서 플레이하세요</p>
+  <div class="games">
+    <a class="card" href="flaffy-poop/">
+      <span class="icon">💩</span>
+      <span class="name">Flaffy Poop</span>
+      <span class="desc">하늘에서 떨어지는 똥을 피하세요!</span>
+    </a>
+  </div>
+</body>
+</html>
