@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mad Minute</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <div id="start-screen">
+    <h1>Mad Minute</h1>
+    <p>3분 안에 50문제의 곱셈을 풀어보세요</p>
+    <button id="start-btn" onclick="startGame()">Start</button>
+  </div>
+
+  <div id="game-screen" class="hidden">
+    <header id="game-header">
+      <div id="timer">3:00</div>
+      <div id="score" class="hidden">— / 50</div>
+      <div id="header-actions">
+        <button id="submit-btn" onclick="submitAnswers()">Submit</button>
+        <button id="reset-btn" class="hidden" onclick="reset()">Reset</button>
+      </div>
+    </header>
+
+    <main>
+      <div id="problem-grid"></div>
+      <div id="history-section" class="hidden"></div>
+    </main>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
