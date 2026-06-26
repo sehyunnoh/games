@@ -1,2 +1,5 @@
 - 똥피하기
 - dino game
+- racing game
+- 옷 갈아 입히기
+- 배구
