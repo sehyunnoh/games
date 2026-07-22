@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="음표 읽기 - 오선보 음을 보고 피아노 건반을 클릭해서 맞춰보세요!">
+  <title>음표 읽기 🎹</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <div id="start-screen">
+    <a class="home-btn" href="../">🏠 홈</a>
+    <h1>음표 읽기 🎹</h1>
+    <p>오선보의 음을 보고 피아노 건반을 클릭해서 맞춰보세요</p>
+
+    <div class="option-group">
+      <div class="option-label">손 모드</div>
+      <div class="option-buttons" id="hand-mode-group">
+        <button class="option-btn selected" data-value="right">오른손만 (𝄞)</button>
+        <button class="option-btn" data-value="left">왼손만 (𝄢)</button>
+        <button class="option-btn" data-value="mixed">혼합</button>
+      </div>
+    </div>
+
+    <div class="option-group">
+      <div class="option-label">음 범위</div>
+      <div class="option-buttons" id="range-mode-group">
+        <button class="option-btn selected" data-value="staff">오선 안쪽만</button>
+        <button class="option-btn" data-value="extended">가운데 도 포함</button>
+      </div>
+    </div>
+
+    <button id="start-btn">Start</button>
+
+    <div id="best-streak-display" class="hidden">최고 연속 정답: <span id="best-streak-value">0</span></div>
+  </div>
+
+  <div id="game-screen" class="hidden">
+    <header id="game-header">
+      <div id="stats">
+        <span id="streak-display">🔥 0</span>
+        <span id="accuracy-display">0 / 0</span>
+      </div>
+      <div id="header-actions">
+        <a class="home-btn" href="../">🏠</a>
+        <button id="settings-btn">설정</button>
+      </div>
+    </header>
+
+    <main id="play-area">
+      <div id="staff-container"></div>
+      <div id="keyboard"></div>
+    </main>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
