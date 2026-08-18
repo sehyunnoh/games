@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>수와 숫자</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <div id="start-screen">
+    <a class="home-btn" href="../">🏠 홈</a>
+    <h1>수와 숫자</h1>
+    <p>범위 안에 수는 몇 개, 숫자는 몇 개인지 맞혀보세요</p>
+
+    <div class="explain-box">
+      <div class="explain-row"><span class="explain-q">10에서 22까지의 수</span></div>
+      <div class="explain-row">
+        <span class="explain-item"><b>수</b>의 개수 = 22 - 10 + 1 = <b>13개</b></span>
+        <span class="explain-item"><b>숫자</b>의 개수 = 13 × 2 = <b>26개</b></span>
+      </div>
+    </div>
+
+    <div class="options">
+      <label class="option-group">
+        최소값
+        <input type="number" id="range-min" value="1" min="1" max="9999" inputmode="numeric" autocomplete="off">
+      </label>
+
+      <label class="option-group">
+        최대값
+        <input type="number" id="range-max" value="100" min="1" max="9999" inputmode="numeric" autocomplete="off">
+      </label>
+    </div>
+
+    <div id="range-error" class="hidden"></div>
+
+    <button id="start-btn" onclick="startGame()">Start</button>
+  </div>
+
+  <div id="game-screen" class="hidden">
+    <header id="game-header">
+      <div id="elapsed">0:00</div>
+      <div id="range-label"></div>
+      <div id="score" class="hidden">— / —</div>
+      <div id="header-actions">
+        <a class="home-btn" href="../">🏠</a>
+        <button id="submit-btn" onclick="submitAnswers()">Submit</button>
+        <button id="reset-btn" class="hidden" onclick="reset()">Reset</button>
+      </div>
+    </header>
+
+    <main>
+      <div id="problem-grid"></div>
+      <div id="history-section" class="hidden"></div>
+    </main>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
