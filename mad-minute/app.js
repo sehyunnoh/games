@@ -1,3 +1,55 @@
+// ── I18N ──
+
+const LANG_KEY = 'siteLang';
+
+const I18N = {
+  ko: {
+    home: '🏠 홈',
+    subtitle: '3분 안에 50문제의 곱셈을 풀어보세요',
+    historyTitle: '기록',
+    date: '날짜',
+    score: '점수',
+    timeColumn: '남은 시간',
+    timeout: '타임아웃',
+    timeLeft: '{time} 남음',
+  },
+  en: {
+    home: '🏠 Home',
+    subtitle: 'Solve 50 multiplication problems in 3 minutes',
+    historyTitle: 'History',
+    date: 'Date',
+    score: 'Score',
+    timeColumn: 'Time left',
+    timeout: 'Timeout',
+    timeLeft: '{time} left',
+  },
+};
+
+let lang = localStorage.getItem(LANG_KEY) === 'en' ? 'en' : 'ko';
+
+function t(key, params) {
+  let s = I18N[lang][key] ?? key;
+  if (params) for (const [k, v] of Object.entries(params)) s = s.replaceAll(`{${k}}`, v);
+  return s;
+}
+
+function toggleLang() {
+  lang = lang === 'ko' ? 'en' : 'ko';
+  localStorage.setItem(LANG_KEY, lang);
+  applyLanguage();
+}
+
+function applyLanguage() {
+  document.documentElement.lang = lang;
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    el.textContent = t(el.dataset.i18n);
+  });
+  const label = lang === 'ko' ? '🌐 English' : '🌐 한국어';
+  document.getElementById('lang-btn').textContent = label;
+  document.getElementById('lang-btn-game').textContent = label;
+  if (state.phase === 'RESULT') renderHistory();
+}
+
 const state = {
   phase: 'START',
   problems: [],
@@ -141,8 +193,8 @@ function renderHistory() {
     const pad = n => String(n).padStart(2, '0');
     const dateStr = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
     const timeStr = h.timeLeft === 0
-      ? '타임아웃'
-      : `${Math.floor(h.timeLeft / 60)}:${pad(h.timeLeft % 60)} 남음`;
+      ? t('timeout')
+      : t('timeLeft', { time: `${Math.floor(h.timeLeft / 60)}:${pad(h.timeLeft % 60)}` });
 
     const classes = [isBest ? 'history-best' : '', isCurrent ? 'history-current' : ''].filter(Boolean).join(' ');
 
@@ -155,14 +207,14 @@ function renderHistory() {
   }).join('');
 
   section.innerHTML = `
-    <div class="history-title">기록</div>
+    <div class="history-title">${t('historyTitle')}</div>
     <table class="history-table">
       <thead>
         <tr>
           <th></th>
-          <th>날짜</th>
-          <th>점수</th>
-          <th>남은 시간</th>
+          <th>${t('date')}</th>
+          <th>${t('score')}</th>
+          <th>${t('timeColumn')}</th>
         </tr>
       </thead>
       <tbody>${rows}</tbody>
@@ -190,3 +242,5 @@ function reset() {
   document.getElementById('game-screen').classList.add('hidden');
   document.getElementById('start-screen').classList.remove('hidden');
 }
+
+applyLanguage();

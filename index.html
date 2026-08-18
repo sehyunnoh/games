@@ -35,37 +35,110 @@
     .card .icon { font-size: 3rem; display: block; margin-bottom: 12px; }
     .card .name { font-size: 1rem; font-weight: bold; color: #FFD700; }
     .card .desc { font-size: 0.75rem; color: rgba(255,255,255,0.5); margin-top: 6px; }
+    .lang-btn {
+      position: absolute;
+      top: 20px;
+      right: 24px;
+      padding: 8px 14px;
+      font-family: inherit;
+      font-size: 0.8rem;
+      font-weight: bold;
+      color: rgba(255,255,255,0.7);
+      background: rgba(255,255,255,0.05);
+      border: 2px solid rgba(255,255,255,0.1);
+      border-radius: 8px;
+      cursor: pointer;
+      transition: border-color 0.15s, color 0.15s;
+    }
+    .lang-btn:hover { border-color: #FFD700; color: #FFD700; }
   </style>
 </head>
 <body>
+  <button id="lang-btn" class="lang-btn" onclick="toggleLang()">🌐 English</button>
+
   <h1>🎮 Games</h1>
-  <p>클릭해서 플레이하세요</p>
+  <p data-i18n="subtitle">클릭해서 플레이하세요</p>
   <div class="games">
     <a class="card" href="flaffy-poop/">
       <span class="icon">💩</span>
-      <span class="name">Flaffy Poop</span>
-      <span class="desc">하늘에서 떨어지는 똥을 피하세요!</span>
+      <span class="name" data-i18n="flaffyName">Flaffy Poop</span>
+      <span class="desc" data-i18n="flaffyDesc">하늘에서 떨어지는 똥을 피하세요!</span>
     </a>
     <a class="card" href="mad-minute/">
       <span class="icon">🧮</span>
-      <span class="name">Mad Minute</span>
-      <span class="desc">3분 안에 50문제의 곱셈을 풀어보세요!</span>
+      <span class="name" data-i18n="madName">Mad Minute</span>
+      <span class="desc" data-i18n="madDesc">3분 안에 50문제의 곱셈을 풀어보세요!</span>
     </a>
     <a class="card" href="note-reader/">
       <span class="icon">🎹</span>
-      <span class="name">음표 읽기</span>
-      <span class="desc">오선보 음을 보고 건반을 클릭해서 맞춰보세요!</span>
+      <span class="name" data-i18n="noteName">음표 읽기</span>
+      <span class="desc" data-i18n="noteDesc">오선보 음을 보고 건반을 클릭해서 맞춰보세요!</span>
     </a>
     <a class="card" href="division-drill/">
       <span class="icon">➗</span>
-      <span class="name">나눗셈 연습</span>
-      <span class="desc">몫과 나머지를 구해서 나눗셈을 연습해보세요!</span>
+      <span class="name" data-i18n="divisionName">나눗셈 연습</span>
+      <span class="desc" data-i18n="divisionDesc">몫과 나머지를 구해서 나눗셈을 연습해보세요!</span>
     </a>
     <a class="card" href="number-and-digit/">
       <span class="icon">🔢</span>
-      <span class="name">수와 숫자</span>
-      <span class="desc">범위 안에 수는 몇 개, 숫자는 몇 개일까요?</span>
+      <span class="name" data-i18n="numberName">수와 숫자</span>
+      <span class="desc" data-i18n="numberDesc">범위 안에 수는 몇 개, 숫자는 몇 개일까요?</span>
     </a>
   </div>
+
+  <script>
+    const LANG_KEY = 'siteLang';
+
+    const I18N = {
+      ko: {
+        subtitle: '클릭해서 플레이하세요',
+        flaffyName: 'Flaffy Poop',
+        flaffyDesc: '하늘에서 떨어지는 똥을 피하세요!',
+        madName: 'Mad Minute',
+        madDesc: '3분 안에 50문제의 곱셈을 풀어보세요!',
+        noteName: '음표 읽기',
+        noteDesc: '오선보 음을 보고 건반을 클릭해서 맞춰보세요!',
+        divisionName: '나눗셈 연습',
+        divisionDesc: '몫과 나머지를 구해서 나눗셈을 연습해보세요!',
+        numberName: '수와 숫자',
+        numberDesc: '범위 안에 수는 몇 개, 숫자는 몇 개일까요?',
+      },
+      en: {
+        subtitle: 'Click a game to play',
+        flaffyName: 'Flaffy Poop',
+        flaffyDesc: 'Dodge the poop falling from the sky!',
+        madName: 'Mad Minute',
+        madDesc: 'Solve 50 multiplication problems in 3 minutes!',
+        noteName: 'Note Reader',
+        noteDesc: 'Read the note on the staff and click the right key!',
+        divisionName: 'Division Drill',
+        divisionDesc: 'Practice division by finding quotients and remainders!',
+        numberName: 'Numbers & Digits',
+        numberDesc: 'How many numbers, and how many digits, are in the range?',
+      },
+    };
+
+    let lang = localStorage.getItem(LANG_KEY) === 'en' ? 'en' : 'ko';
+
+    function t(key) {
+      return I18N[lang][key] ?? key;
+    }
+
+    function toggleLang() {
+      lang = lang === 'ko' ? 'en' : 'ko';
+      localStorage.setItem(LANG_KEY, lang);
+      applyLanguage();
+    }
+
+    function applyLanguage() {
+      document.documentElement.lang = lang;
+      document.querySelectorAll('[data-i18n]').forEach(el => {
+        el.textContent = t(el.dataset.i18n);
+      });
+      document.getElementById('lang-btn').textContent = lang === 'ko' ? '🌐 English' : '🌐 한국어';
+    }
+
+    applyLanguage();
+  </script>
 </body>
 </html>

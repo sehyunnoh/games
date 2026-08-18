@@ -1,3 +1,111 @@
+// ── I18N ──
+
+const LANG_KEY = 'siteLang';
+
+const I18N = {
+  ko: {
+    title: '수와 숫자',
+    subtitle: '범위 안에 수는 몇 개, 숫자는 몇 개인지 맞혀보세요',
+    home: '🏠 홈',
+    explainQuestion: '10에서 22까지의 수',
+    explainNumbers: '<b>수</b>의 개수 = 22 - 10 + 1 = <b>13개</b>',
+    explainDigits: '<b>숫자</b>의 개수 = 13 × 2 = <b>26개</b>',
+    minLabel: '최소값',
+    maxLabel: '최대값',
+    errorMaxTooSmall: '최대값은 최소값보다 커야 합니다.',
+    errorRangeTooNarrow: '범위가 너무 좁습니다. 최소 {n}개 이상의 수가 필요합니다.',
+    question: '{start}에서 {end}까지의 수',
+    numbersLabel: '수의 개수',
+    digitsLabel: '숫자의 개수',
+    unit: '개',
+    answer: '정답: 수 {n}개 / 숫자 {d}개',
+    explainHead: '{end} - {start} + 1 = {n}개, ',
+    explainSingle: '{name} 수이므로 {n} × {len} = {total}개',
+    explainTail: ' → {total}개',
+    rangeSep: '~',
+    digit1: '한 자리',
+    digit2: '두 자리',
+    digit3: '세 자리',
+    digit4: '네 자리',
+    historyTitle: '기록',
+    date: '날짜',
+    range: '범위',
+    score: '점수',
+    elapsed: '소요 시간',
+  },
+  en: {
+    title: 'Numbers & Digits',
+    subtitle: 'Guess how many numbers, and how many digits, are in the range',
+    home: '🏠 Home',
+    explainQuestion: 'Numbers from 10 to 22',
+    explainNumbers: '<b>Numbers</b> = 22 - 10 + 1 = <b>13</b>',
+    explainDigits: '<b>Digits</b> = 13 × 2 = <b>26</b>',
+    minLabel: 'Minimum',
+    maxLabel: 'Maximum',
+    errorMaxTooSmall: 'The maximum must be greater than the minimum.',
+    errorRangeTooNarrow: 'That range is too narrow. It needs at least {n} numbers.',
+    question: 'Numbers from {start} to {end}',
+    numbersLabel: 'Numbers',
+    digitsLabel: 'Digits',
+    unit: '',
+    answer: 'Answer: {n} numbers / {d} digits',
+    explainHead: '{end} - {start} + 1 = {n} numbers, ',
+    explainSingle: 'all {name}, so {n} × {len} = {total} digits',
+    explainTail: ' → {total} digits',
+    rangeSep: '-',
+    digit1: '1-digit',
+    digit2: '2-digit',
+    digit3: '3-digit',
+    digit4: '4-digit',
+    historyTitle: 'History',
+    date: 'Date',
+    range: 'Range',
+    score: 'Score',
+    elapsed: 'Time',
+  },
+};
+
+let lang = localStorage.getItem(LANG_KEY) === 'en' ? 'en' : 'ko';
+
+function t(key, params) {
+  let s = I18N[lang][key] ?? key;
+  if (params) for (const [k, v] of Object.entries(params)) s = s.replaceAll(`{${k}}`, v);
+  return s;
+}
+
+function toggleLang() {
+  lang = lang === 'ko' ? 'en' : 'ko';
+  localStorage.setItem(LANG_KEY, lang);
+  applyLanguage();
+}
+
+function applyLanguage() {
+  document.documentElement.lang = lang;
+  document.title = t('title');
+
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    el.textContent = t(el.dataset.i18n);
+  });
+  document.querySelectorAll('[data-i18n-html]').forEach(el => {
+    el.innerHTML = t(el.dataset.i18nHtml);
+  });
+
+  const label = lang === 'ko' ? '🌐 English' : '🌐 한국어';
+  document.getElementById('lang-btn').textContent = label;
+  document.getElementById('lang-btn-game').textContent = label;
+
+  if (state.error) showRangeError(state.error.key, state.error.params);
+
+  // 이미 그려진 문제/기록은 현재 상태 그대로 다시 그린다
+  if (state.problems.length > 0) {
+    captureAnswers();
+    renderProblems();
+  }
+  if (state.phase === 'RESULT') renderHistory();
+}
+
+// ── GAME ──
+
 const PROBLEM_COUNT = 10;
 const MIN_SPAN = 3;
 const MAX_SPAN = 30;
@@ -6,7 +114,6 @@ const ABS_MAX = 9999;
 const DEFAULT_MIN = 1;
 const DEFAULT_MAX = 100;
 const BOUNDARIES = [10, 100, 1000];
-const DIGIT_NAMES = { 1: '한 자리', 2: '두 자리', 3: '세 자리', 4: '네 자리' };
 const SETTINGS_KEY = 'numberAndDigitSettings';
 const HISTORY_KEY = 'numberAndDigitHistory';
 
@@ -14,6 +121,8 @@ const state = {
   phase: 'START',
   settings: null,
   problems: [],
+  answers: [],
+  error: null,
   elapsedSeconds: 0,
   timerId: null,
 };
@@ -151,28 +260,36 @@ function generateProblems(min, max) {
   return problems;
 }
 
-// 수를 읽었을 때 받침이 있으면 '은', 없으면 '는' (2·4·5·9로 끝나면 받침 없음)
+// 수를 읽었을 때 받침이 있으면 '은', 없으면 '는' (2·4·5·9로 끝나면 받침 없음) — 한국어 전용
 function topicParticle(n) {
   return [2, 4, 5, 9].includes(n % 10) ? '는' : '은';
 }
 
 function buildExplanation(p) {
   const segments = splitByDigitLength(p.start, p.end);
-  const head = `${p.end} - ${p.start} + 1 = ${p.numberCount}개`;
+  const head = t('explainHead', { end: p.end, start: p.start, n: p.numberCount });
 
   if (segments.length === 1) {
     const len = segments[0].len;
-    return `${head}, ${DIGIT_NAMES[len]} 수이므로 ${p.numberCount} × ${len} = ${p.digitCount}개`;
+    return head + t('explainSingle', {
+      name: t(`digit${len}`),
+      n: p.numberCount,
+      len,
+      total: p.digitCount,
+    });
   }
 
   const parts = segments
     .map(s => {
-      const label = s.count === 1 ? `${s.from}` : `${s.from}~${s.to}`;
-      return `${label}${topicParticle(s.to)} ${s.count}개×${s.len}=${s.count * s.len}`;
+      const label = s.count === 1 ? `${s.from}` : `${s.from}${t('rangeSep')}${s.to}`;
+      const calc = `${s.count}×${s.len}=${s.count * s.len}`;
+      return lang === 'ko'
+        ? `${label}${topicParticle(s.to)} ${s.count}개×${s.len}=${s.count * s.len}`
+        : `${label}: ${calc}`;
     })
     .join(', ');
 
-  return `${head}, ${parts} → ${p.digitCount}개`;
+  return head + parts + t('explainTail', { total: p.digitCount });
 }
 
 // ── 설정 ──
@@ -189,10 +306,17 @@ function saveSettings(settings) {
   localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
 }
 
-function showRangeError(message) {
+function showRangeError(key, params) {
+  state.error = { key, params };
+
   const el = document.getElementById('range-error');
-  el.textContent = message;
+  el.textContent = t(key, params);
   el.classList.remove('hidden');
+}
+
+function clearRangeError() {
+  state.error = null;
+  document.getElementById('range-error').classList.add('hidden');
 }
 
 function readSettings() {
@@ -210,20 +334,32 @@ function readSettings() {
   maxInput.value = max;
 
   if (max <= min) {
-    showRangeError('최대값은 최소값보다 커야 합니다.');
+    showRangeError('errorMaxTooSmall');
     return null;
   }
 
   if (max - min + 1 < MIN_SPAN) {
-    showRangeError(`범위가 너무 좁습니다. 최소 ${MIN_SPAN}개 이상의 수가 필요합니다.`);
+    showRangeError('errorRangeTooNarrow', { n: MIN_SPAN });
     return null;
   }
 
-  document.getElementById('range-error').classList.add('hidden');
+  clearRangeError();
   return { min, max };
 }
 
 // ── 렌더링 ──
+
+// 화면의 입력값을 state에 담아둔다 (언어 전환으로 다시 그려도 유지되도록)
+function captureAnswers() {
+  if (state.phase === 'RESULT') return;
+
+  state.problems.forEach((p, i) => {
+    const nInput = document.getElementById(`n-${i}`);
+    const dInput = document.getElementById(`d-${i}`);
+    if (!nInput || !dInput) return;
+    state.answers[i] = { n: nInput.value, d: dInput.value };
+  });
+}
 
 function renderProblems() {
   const grid = document.getElementById('problem-grid');
@@ -236,14 +372,17 @@ function renderProblems() {
     card.innerHTML = `
       <span class="problem-num">${i + 1}</span>
       <div class="question-text">
-        <span class="range-num">${p.start}</span>에서 <span class="range-num">${p.end}</span>까지의 수
+        ${t('question', {
+          start: `<span class="range-num">${p.start}</span>`,
+          end: `<span class="range-num">${p.end}</span>`,
+        })}
       </div>
       <div class="answer-row">
-        <label class="answer-field">수의 개수
-          <input type="number" id="n-${i}" class="answer-input" inputmode="numeric" autocomplete="off">개
+        <label class="answer-field">${t('numbersLabel')}
+          <input type="number" id="n-${i}" class="answer-input" inputmode="numeric" autocomplete="off">${t('unit')}
         </label>
-        <label class="answer-field">숫자의 개수
-          <input type="number" id="d-${i}" class="answer-input" inputmode="numeric" autocomplete="off">개
+        <label class="answer-field">${t('digitsLabel')}
+          <input type="number" id="d-${i}" class="answer-input" inputmode="numeric" autocomplete="off">${t('unit')}
         </label>
       </div>
       <div class="correct-answer hidden" id="correct-${i}"></div>
@@ -252,8 +391,43 @@ function renderProblems() {
     grid.appendChild(card);
   });
 
-  const first = document.getElementById('n-0');
-  if (first) first.focus();
+  restoreAnswers();
+
+  if (state.phase === 'PLAYING') {
+    const first = document.getElementById('n-0');
+    if (first) first.focus();
+  }
+}
+
+// 저장해둔 입력값과 채점 결과를 화면에 되돌린다
+function restoreAnswers() {
+  state.problems.forEach((p, i) => {
+    const answer = state.answers[i];
+    if (!answer) return;
+
+    const nInput = document.getElementById(`n-${i}`);
+    const dInput = document.getElementById(`d-${i}`);
+    nInput.value = answer.n;
+    dInput.value = answer.d;
+
+    if (state.phase !== 'RESULT') return;
+
+    nInput.disabled = true;
+    dInput.disabled = true;
+
+    const card = document.getElementById(`card-${i}`);
+    card.classList.add(answer.correct ? 'correct' : 'wrong');
+
+    if (!answer.correct) {
+      const correctEl = document.getElementById(`correct-${i}`);
+      correctEl.textContent = t('answer', { n: p.numberCount, d: p.digitCount });
+      correctEl.classList.remove('hidden');
+
+      const explainEl = document.getElementById(`explain-${i}`);
+      explainEl.textContent = buildExplanation(p);
+      explainEl.classList.remove('hidden');
+    }
+  });
 }
 
 // ── 게임 흐름 ──
@@ -266,6 +440,8 @@ function startGame() {
 
   state.settings = settings;
   state.problems = generateProblems(settings.min, settings.max);
+  state.answers = [];
+  state.phase = 'PLAYING';
 
   document.getElementById('range-label').textContent = `${settings.min} ~ ${settings.max}`;
   renderProblems();
@@ -273,7 +449,6 @@ function startGame() {
   document.getElementById('start-screen').classList.add('hidden');
   document.getElementById('game-screen').classList.remove('hidden');
 
-  state.phase = 'PLAYING';
   state.elapsedSeconds = 0;
   updateElapsedDisplay();
   startTimer();
@@ -298,42 +473,27 @@ function updateElapsedDisplay() {
 
 function submitAnswers() {
   if (state.phase === 'RESULT') return;
-  state.phase = 'RESULT';
 
+  captureAnswers();
   stopTimer();
 
   let correct = 0;
 
   state.problems.forEach((p, i) => {
-    const nInput = document.getElementById(`n-${i}`);
-    const dInput = document.getElementById(`d-${i}`);
-    const card = document.getElementById(`card-${i}`);
-
-    const nVal = nInput.value.trim();
-    const dVal = dInput.value.trim();
+    const answer = state.answers[i] || { n: '', d: '' };
+    const nVal = answer.n.trim();
+    const dVal = answer.d.trim();
     const userNumbers = nVal === '' ? NaN : Number(nVal);
     const userDigits = dVal === '' ? NaN : Number(dVal);
 
-    nInput.disabled = true;
-    dInput.disabled = true;
+    answer.correct = userNumbers === p.numberCount && userDigits === p.digitCount;
+    state.answers[i] = answer;
 
-    const isCorrect = userNumbers === p.numberCount && userDigits === p.digitCount;
-
-    if (isCorrect) {
-      card.classList.add('correct');
-      correct++;
-    } else {
-      card.classList.add('wrong');
-
-      const correctEl = document.getElementById(`correct-${i}`);
-      correctEl.textContent = `정답: 수 ${p.numberCount}개 / 숫자 ${p.digitCount}개`;
-      correctEl.classList.remove('hidden');
-
-      const explainEl = document.getElementById(`explain-${i}`);
-      explainEl.textContent = buildExplanation(p);
-      explainEl.classList.remove('hidden');
-    }
+    if (answer.correct) correct++;
   });
+
+  state.phase = 'RESULT';
+  renderProblems();
 
   const scoreEl = document.getElementById('score');
   scoreEl.textContent = `${correct} / ${state.problems.length}`;
@@ -391,15 +551,15 @@ function renderHistory() {
   }).join('');
 
   section.innerHTML = `
-    <div class="history-title">기록</div>
+    <div class="history-title">${t('historyTitle')}</div>
     <table class="history-table">
       <thead>
         <tr>
           <th></th>
-          <th>날짜</th>
-          <th>범위</th>
-          <th>점수</th>
-          <th>소요 시간</th>
+          <th>${t('date')}</th>
+          <th>${t('range')}</th>
+          <th>${t('score')}</th>
+          <th>${t('elapsed')}</th>
         </tr>
       </thead>
       <tbody>${rows}</tbody>
@@ -412,6 +572,7 @@ function reset() {
   stopTimer();
   state.phase = 'START';
   state.problems = [];
+  state.answers = [];
   state.elapsedSeconds = 0;
 
   document.getElementById('elapsed').textContent = '0:00';
@@ -437,4 +598,6 @@ function reset() {
       if (e.key === 'Enter') startGame();
     });
   });
+
+  applyLanguage();
 })();

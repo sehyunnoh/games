@@ -9,32 +9,33 @@
 <body>
 
   <div id="start-screen">
-    <a class="home-btn" href="../">🏠 홈</a>
-    <h1>나눗셈 연습</h1>
-    <p>문제를 풀고 몫과 나머지를 입력한 뒤 Submit을 눌러보세요</p>
+    <a class="home-btn" href="../" data-i18n="home">🏠 홈</a>
+    <button id="lang-btn" class="lang-btn" onclick="toggleLang()"></button>
+    <h1 data-i18n="title">나눗셈 연습</h1>
+    <p data-i18n="subtitle">문제를 풀고 몫과 나머지를 입력한 뒤 Submit을 눌러보세요</p>
 
     <div class="options">
       <label class="option-group">
-        나눠지는 수 (피제수) 자리수
+        <span data-i18n="dividendLabel">나눠지는 수 (피제수) 자리수</span>
         <select id="dividend-digit">
-          <option value="십" selected>십의자리 (1~10)</option>
-          <option value="백">백의자리 (1~100)</option>
-          <option value="천">천의자리 (1~1000)</option>
-          <option value="만">만의자리 (1~10000)</option>
+          <option value="ten" data-i18n="dividendTen" selected>십의자리 (1~10)</option>
+          <option value="hundred" data-i18n="dividendHundred">백의자리 (1~100)</option>
+          <option value="thousand" data-i18n="dividendThousand">천의자리 (1~1000)</option>
+          <option value="tenThousand" data-i18n="dividendTenThousand">만의자리 (1~10000)</option>
         </select>
       </label>
 
       <label class="option-group">
-        나누는 수 (제수) 자리수
+        <span data-i18n="divisorLabel">나누는 수 (제수) 자리수</span>
         <select id="divisor-digit">
-          <option value="일" selected>일의자리 (1~9)</option>
-          <option value="십">십의자리 (1~10)</option>
-          <option value="백">백의자리 (1~100)</option>
+          <option value="one" data-i18n="divisorOne" selected>일의자리 (1~9)</option>
+          <option value="ten" data-i18n="divisorTen">십의자리 (1~10)</option>
+          <option value="hundred" data-i18n="divisorHundred">백의자리 (1~100)</option>
         </select>
       </label>
 
       <label class="option-group">
-        문제 수
+        <span data-i18n="problemCount">문제 수</span>
         <select id="problem-count">
           <option value="5">5</option>
           <option value="10" selected>10</option>
@@ -52,6 +53,7 @@
       <div id="score" class="hidden">— / —</div>
       <div id="header-actions">
         <a class="home-btn" href="../">🏠</a>
+        <button id="lang-btn-game" class="lang-btn" onclick="toggleLang()"></button>
         <button id="submit-btn" onclick="submitAnswers()">Submit</button>
         <button id="reset-btn" class="hidden" onclick="reset()">Reset</button>
       </div>

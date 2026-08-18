@@ -61,6 +61,64 @@
   }
 
   // ── DOM refs ──
+  // ── I18N ──
+
+  const LANG_KEY = 'siteLang';
+
+  const I18N = {
+    ko: {
+      title: '음표 읽기 🎹',
+      subtitle: '오선보의 음을 보고 피아노 건반을 클릭해서 맞춰보세요',
+      home: '🏠 홈',
+      handMode: '손 모드',
+      rightOnly: '오른손만 (𝄞)',
+      leftOnly: '왼손만 (𝄢)',
+      mixed: '혼합',
+      noteRange: '음 범위',
+      staffOnly: '오선 안쪽만',
+      extended: '가운데 도 포함',
+      bestStreak: '최고 연속 정답:',
+      settings: '설정',
+    },
+    en: {
+      title: 'Note Reader 🎹',
+      subtitle: 'Read the note on the staff and click the matching piano key',
+      home: '🏠 Home',
+      handMode: 'Hand',
+      rightOnly: 'Right hand only (𝄞)',
+      leftOnly: 'Left hand only (𝄢)',
+      mixed: 'Mixed',
+      noteRange: 'Note range',
+      staffOnly: 'Within the staff',
+      extended: 'Include middle C',
+      bestStreak: 'Best streak:',
+      settings: 'Settings',
+    },
+  };
+
+  let lang = localStorage.getItem(LANG_KEY) === 'en' ? 'en' : 'ko';
+
+  function t(key) {
+    return I18N[lang][key] ?? key;
+  }
+
+  function toggleLang() {
+    lang = lang === 'ko' ? 'en' : 'ko';
+    localStorage.setItem(LANG_KEY, lang);
+    applyLanguage();
+  }
+
+  function applyLanguage() {
+    document.documentElement.lang = lang;
+    document.title = t('title');
+    document.querySelectorAll('[data-i18n]').forEach((el) => {
+      el.textContent = t(el.dataset.i18n);
+    });
+    const label = lang === 'ko' ? '🌐 English' : '🌐 한국어';
+    langBtn.textContent = label;
+    langBtnGame.textContent = label;
+  }
+
   const startScreen = document.getElementById('start-screen');
   const gameScreen = document.getElementById('game-screen');
   const handModeGroup = document.getElementById('hand-mode-group');
@@ -73,6 +131,8 @@
   const accuracyDisplay = document.getElementById('accuracy-display');
   const bestStreakDisplay = document.getElementById('best-streak-display');
   const bestStreakValue = document.getElementById('best-streak-value');
+  const langBtn = document.getElementById('lang-btn');
+  const langBtnGame = document.getElementById('lang-btn-game');
 
   const settings = { handMode: 'right', rangeMode: 'staff' };
 
@@ -129,6 +189,9 @@
       bestStreakDisplay.classList.remove('hidden');
     }
   }
+
+  langBtn.addEventListener('click', toggleLang);
+  langBtnGame.addEventListener('click', toggleLang);
 
   startBtn.addEventListener('click', startGame);
   settingsBtn.addEventListener('click', goToStart);
@@ -297,5 +360,6 @@
     setTimeout(nextQuestion, correct ? 500 : 1000);
   }
 
+  applyLanguage();
   goToStart();
 })();

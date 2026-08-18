@@ -30,3 +30,22 @@ canvas {
   z-index: 100;
 }
 .home-btn:hover { background: rgba(0, 0, 0, 0.7); }
+
+.lang-btn {
+  position: fixed;
+  top: 12px;
+  right: 12px;
+  font-family: inherit;
+  font-size: 0.85rem;
+  font-weight: bold;
+  color: #fff;
+  background: rgba(0, 0, 0, 0.45);
+  border: none;
+  border-radius: 10px;
+  padding: 8px 10px;
+  line-height: 1;
+  cursor: pointer;
+  transition: background 0.15s;
+  z-index: 100;
+}
+.lang-btn:hover { background: rgba(0, 0, 0, 0.7); }

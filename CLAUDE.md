@@ -21,6 +21,7 @@ Then open `http://localhost:8000/` for the launcher, or `http://localhost:8000/<
 1. Create a new top-level directory (kebab or plain lowercase name) containing `index.html`, `style.css`, and a JS file (`app.js` or `game.js`).
 2. Add a home-navigation link back to the root: `<a class="home-btn" href="../">🏠</a>` (see `flaffy-poop/index.html` or `mad-minute/index.html` for placement/styling).
 3. Add a matching `.card` entry in the root `index.html` (`<a class="card" href="<game-dir>/">` with an `.icon`, `.name`, `.desc`).
+4. Add the language toggle button (see "Language toggle" below) — every page on the site has one.
 
 Note: `gamelist.md` is an informal idea backlog, not a registry of built games (`mad-minute` was built but never added to it) — don't treat it as something to keep in sync.
 
@@ -33,7 +34,27 @@ Games are plain vanilla JS with no modules/imports — everything lives in one s
 
 Both patterns favor a single flat state object/set of globals per file over classes or frameworks — follow the existing style within a game's file rather than introducing new patterns.
 
-UI text and in-game copy are written in Korean (`lang="ko"` on `<html>`); match this when adding UI-facing strings to existing games.
+UI text and in-game copy default to Korean (`lang="ko"` on `<html>`); every UI-facing string must also have an English translation — see below.
+
+## Language toggle (i18n)
+
+Every page (root launcher + each game) has a `🌐 English` / `🌐 한국어` toggle button in the top right. Default is Korean; the choice is stored in `localStorage` under the **shared key `siteLang`**, so switching in one game carries over to the launcher and every other game.
+
+Translation code is **duplicated per game** (no shared `i18n.js`) so each game stays self-contained. Each game's JS carries the same small block:
+
+- `const I18N = { ko: {...}, en: {...} }` — the game's own dictionary
+- `t(key, params)` — lookup with `{name}` placeholder substitution
+- `toggleLang()` — flips the language, saves to `siteLang`, calls `applyLanguage()`
+- `applyLanguage()` — sets `document.documentElement.lang` / `document.title`, replaces every `[data-i18n]` element's `textContent` (and `[data-i18n-html]`'s `innerHTML` where markup is needed), updates the button label, then re-renders any dynamically drawn text
+
+Rules when adding UI strings:
+
+- Static HTML text → `data-i18n="key"` on the element. If the text sits inside a `<label>` next to an `<input>`/`<select>`, wrap it in its own `<span data-i18n>` — `applyLanguage()` overwrites `textContent` and would otherwise delete the field.
+- Dynamically built text (problem cards, history tables, canvas draws) → call `t()` at render time, and make sure `applyLanguage()` re-renders it. In the drill games, user input and grading results live in `state.answers` so a re-render mid-game keeps them.
+- Never use a translated string as a data key or `<select value>` — keep those language-neutral (`ten`, `hundred`) and translate only the label. `division-drill` maps legacy Korean values from old `localStorage` records for display.
+- Canvas games (`flaffy-poop`) redraw text every frame, so swapping the dictionary is enough; character/power names are stored as `nameKey`/`labelKey` and resolved through `t()`.
+
+`I18N_PLAN.md` at the repo root records the design and per-game breakdown.
 
 ## Design docs convention (optional per-game)
 

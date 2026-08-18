@@ -1,3 +1,119 @@
+// ─── I18N ──────────────────────────────────────────────
+const LANG_KEY = 'siteLang';
+
+const I18N = {
+  ko: {
+    tagline: '하늘에서 떨어지는 똥을 피하세요!',
+    startHint: 'Space 또는 화면 탭으로 시작',
+    highScore: '최고 점수: {n}',
+    moveHint: '← → 또는 A/D 키로 이동',
+    charSelect: '캐릭터 선택',
+    powerLabel: '{icon} 파워: {name}',
+    confirmHint: 'Space / Enter / 탭으로 선택 확정',
+    selectMoveHint: '← → ↑ ↓ 키 또는 클릭으로 이동',
+    score: '점수: {n}',
+    best: '최고: {n}',
+    noPower: '파워없음',
+    gameOver: '게임 오버!',
+    newRecord: '🏆 신기록! {n}',
+    retryHint: 'Space / 탭: 재도전',
+    changeCharHint: 'C: 캐릭터 변경',
+    spit: '퉤!',
+    eatMode: '먹기 모드!',
+    divineOn: '✨ 신의 가호!',
+    freezeOn: '❄️ 타임스톱!',
+    shieldOn: '🛡️ 방어막!',
+    freezeOff: '해제',
+    blocked: '막았다!',
+    yum: '냠냠!',
+    splat: '퍽!',
+    girl1Name: '여자 1',
+    girl1Label: '활발한 여자',
+    girl2Name: '여자 2',
+    girl2Label: '붉은머리 여자',
+    boy1Name: '남자 1',
+    boy1Label: '평범한 남자',
+    boy2Name: '남자 2',
+    boy2Label: '곱슬머리 남자',
+    godName: 'God',
+    godLabel: '신은 피할 수 있을까?',
+    powerFreeze: '타임스톱',
+    powerGun: '총쏘기',
+    powerEat: '먹기/뱉기',
+    powerShield: '방어막',
+    powerDivine: '신의 가호',
+    eatSpit: '뱉기',
+    eatWaiting: '대기중',
+    eatEat: '먹기',
+    divineActive: '가호중',
+  },
+  en: {
+    tagline: 'Dodge the poop falling from the sky!',
+    startHint: 'Press Space or tap to start',
+    highScore: 'Best score: {n}',
+    moveHint: 'Move with arrows or A/D',
+    charSelect: 'Pick a character',
+    powerLabel: '{icon} Power: {name}',
+    confirmHint: 'Space / Enter / tap to confirm',
+    selectMoveHint: 'Arrow keys or click to move',
+    score: 'Score: {n}',
+    best: 'Best: {n}',
+    noPower: 'No power',
+    gameOver: 'Game Over!',
+    newRecord: '🏆 New record! {n}',
+    retryHint: 'Space / tap: retry',
+    changeCharHint: 'C: change character',
+    spit: 'Ptooey!',
+    eatMode: 'Eat mode!',
+    divineOn: '✨ Divine grace!',
+    freezeOn: '❄️ Time stop!',
+    shieldOn: '🛡️ Shield!',
+    freezeOff: 'Off',
+    blocked: 'Blocked!',
+    yum: 'Yum!',
+    splat: 'Splat!',
+    girl1Name: 'Girl 1',
+    girl1Label: 'The lively one',
+    girl2Name: 'Girl 2',
+    girl2Label: 'The redhead',
+    boy1Name: 'Boy 1',
+    boy1Label: 'The ordinary one',
+    boy2Name: 'Boy 2',
+    boy2Label: 'The curly-haired one',
+    godName: 'God',
+    godLabel: 'Can even a god dodge them?',
+    powerFreeze: 'Time Stop',
+    powerGun: 'Shoot',
+    powerEat: 'Eat / Spit',
+    powerShield: 'Shield',
+    powerDivine: 'Divine Grace',
+    eatSpit: 'Spit',
+    eatWaiting: 'Waiting',
+    eatEat: 'Eat',
+    divineActive: 'Active',
+  },
+};
+
+let lang = localStorage.getItem(LANG_KEY) === 'en' ? 'en' : 'ko';
+
+function t(key, params) {
+  let s = I18N[lang][key] ?? key;
+  if (params) for (const [k, v] of Object.entries(params)) s = s.replaceAll(`{${k}}`, v);
+  return s;
+}
+
+// 캔버스 문구는 매 프레임 다시 그려지므로 사전만 바꾸면 전환이 곰바로 반영된다
+function toggleLang() {
+  lang = lang === 'ko' ? 'en' : 'ko';
+  localStorage.setItem(LANG_KEY, lang);
+  applyLanguage();
+}
+
+function applyLanguage() {
+  document.documentElement.lang = lang;
+  document.getElementById('lang-btn').textContent = lang === 'ko' ? '🌐 EN' : '🌐 한';
+}
+
 // ─── Canvas Setup ───────────────────────────────────────────────
 const canvas = document.getElementById('game');
 const ctx = canvas.getContext('2d');
@@ -36,24 +152,24 @@ const POWER_BTN = { x: 338, y: BASE_H - 28, r: 24 };
 //   divine : 모든 똥 위로 상승 + 8초 생성 금지 (cooldown 15초)
 const CHARACTERS = [
   {
-    emoji: '👩',   name: '여자 1',   label: '활발한 여자',
-    power: { type: 'freeze', name: '타임스톱', icon: '❄️', maxActive: 3000, maxCooldown: 10000 }
+    emoji: '👩',   nameKey: 'girl1Name', labelKey: 'girl1Label',
+    power: { type: 'freeze', nameKey: 'powerFreeze', icon: '❄️', maxActive: 3000, maxCooldown: 10000 }
   },
   {
-    emoji: '👩‍🦰', name: '여자 2',   label: '붉은머리 여자',
-    power: { type: 'gun', name: '총쏘기', icon: '🔫', maxActive: 0, maxCooldown: 800 }
+    emoji: '👩‍🦰', nameKey: 'girl2Name', labelKey: 'girl2Label',
+    power: { type: 'gun', nameKey: 'powerGun', icon: '🔫', maxActive: 0, maxCooldown: 800 }
   },
   {
-    emoji: '👨',   name: '남자 1',   label: '평범한 남자',
-    power: { type: 'eat', name: '먹기/뱉기', icon: '🤤', maxActive: 0, maxCooldown: 6000 }
+    emoji: '👨',   nameKey: 'boy1Name', labelKey: 'boy1Label',
+    power: { type: 'eat', nameKey: 'powerEat', icon: '🤤', maxActive: 0, maxCooldown: 6000 }
   },
   {
-    emoji: '👨‍🦱', name: '남자 2',   label: '곱슬머리 남자',
-    power: { type: 'shield', name: '방어막', icon: '🛡️', maxActive: 5000, maxCooldown: 15000 }
+    emoji: '👨‍🦱', nameKey: 'boy2Name', labelKey: 'boy2Label',
+    power: { type: 'shield', nameKey: 'powerShield', icon: '🛡️', maxActive: 5000, maxCooldown: 15000 }
   },
   {
-    emoji: '😇', name: 'God', label: '신은 피할 수 있을까?',
-    power: { type: 'divine', name: '신의 가호', icon: '✨', maxActive: 8000, maxCooldown: 15000 }
+    emoji: '😇', nameKey: 'godName', labelKey: 'godLabel',
+    power: { type: 'divine', nameKey: 'powerDivine', icon: '✨', maxActive: 8000, maxCooldown: 15000 }
   },
 ];
 
@@ -180,14 +296,14 @@ function activatePower() {
     if (powerState.storedPoops > 0) {
       spits.push({ x: player.x + player.width / 2, y: player.y, wobble: 0 });
       powerState.storedPoops--;
-      addFloatingText(player.x + player.width / 2, player.y - 20, '퉤!', '#A0522D');
+      addFloatingText(player.x + player.width / 2, player.y - 20, t('spit'), '#A0522D');
       return;
     }
     // Enter eat mode (needs cooldown to be 0)
     if (powerState.cooldown > 0 || powerState.eatMode) return;
     powerState.eatMode     = true;
     powerState.eatModeTime = 4000;
-    addFloatingText(player.x + player.width / 2, player.y - 20, '먹기 모드!', '#00FF88');
+    addFloatingText(player.x + player.width / 2, player.y - 20, t('eatMode'), '#00FF88');
     return;
   }
 
@@ -201,7 +317,7 @@ function activatePower() {
       p.wobbleAmp  = 4;
     }
     powerState.noSpawnTime = power.maxActive;
-    addFloatingText(BASE_W / 2, GROUND_Y / 2 - 20, '✨ 신의 가호!', '#FFD700');
+    addFloatingText(BASE_W / 2, GROUND_Y / 2 - 20, t('divineOn'), '#FFD700');
     spawnParticles(BASE_W / 2, GROUND_Y / 2, ['#FFD700', '#FFFFFF', '#FFA500', '#FFFFAA']);
     return;
   }
@@ -213,7 +329,7 @@ function activatePower() {
     case 'freeze':
       powerState.isActive   = true;
       powerState.activeTime = power.maxActive;
-      addFloatingText(BASE_W / 2, GROUND_Y / 2, '❄️ 타임스톱!', '#88CCFF');
+      addFloatingText(BASE_W / 2, GROUND_Y / 2, t('freezeOn'), '#88CCFF');
       break;
     case 'gun':
       bullets.push({ x: player.x + player.width / 2, y: player.y });
@@ -222,7 +338,7 @@ function activatePower() {
     case 'shield':
       powerState.isActive   = true;
       powerState.activeTime = power.maxActive;
-      addFloatingText(BASE_W / 2, GROUND_Y / 2, '🛡️ 방어막!', '#88FFFF');
+      addFloatingText(BASE_W / 2, GROUND_Y / 2, t('shieldOn'), '#88FFFF');
       break;
   }
 }
@@ -252,7 +368,7 @@ function updatePower(dt) {
       powerState.isActive   = false;
       powerState.activeTime = 0;
       powerState.cooldown   = power.maxCooldown;
-      if (power.type === 'freeze') addFloatingText(BASE_W / 2, GROUND_Y / 2, '해제', '#88CCFF');
+      if (power.type === 'freeze') addFloatingText(BASE_W / 2, GROUND_Y / 2, t('freezeOff'), '#88CCFF');
     }
   }
 
@@ -339,7 +455,7 @@ function updatePoops() {
       if (hasShield) {
         // Shield absorbs poop
         spawnParticles(p.x, p.y, ['#00FFFF', '#88FFFF', '#FFFFFF']);
-        addFloatingText(p.x, p.y - 20, '막았다!', '#00FFFF');
+        addFloatingText(p.x, p.y - 20, t('blocked'), '#00FFFF');
         poops.splice(i, 1);
         score++;
         continue;
@@ -347,7 +463,7 @@ function updatePoops() {
       if (canEat) {
         // Eat mode absorbs poop
         spawnParticles(p.x, p.y, ['#8B4513', '#A0522D', '#D2691E']);
-        addFloatingText(player.x + player.width / 2, player.y - 20, '냠냠!', '#FFD700');
+        addFloatingText(player.x + player.width / 2, player.y - 20, t('yum'), '#FFD700');
         powerState.storedPoops = Math.min(3, powerState.storedPoops + 1);
         powerState.eatMode     = false;
         powerState.eatModeTime = 0;
@@ -395,7 +511,7 @@ function updateSpits() {
     for (let j = poops.length - 1; j >= 0; j--) {
       if (spitHitsPoop(s, poops[j])) {
         spawnParticles(poops[j].x, poops[j].y, ['#8B4513', '#A0522D', '#D2691E']);
-        addFloatingText(poops[j].x, poops[j].y - 10, '퍽!', '#A0522D');
+        addFloatingText(poops[j].x, poops[j].y - 10, t('splat'), '#A0522D');
         score++;
         poops.splice(j, 1);
         hit = true;
@@ -512,13 +628,13 @@ function renderMenu() {
 
   drawEmoji('💩', BASE_W / 2, 195, 64);
   drawTextOutlined('Flaffy Poop', BASE_W / 2, 265, 28, '#FFD700');
-  drawTextOutlined('하늘에서 떨어지는 똥을 피하세요!', BASE_W / 2, 305, 13, '#fff');
+  drawTextOutlined(t('tagline'), BASE_W / 2, 305, 13, '#fff');
 
   if (Math.floor(Date.now() / 500) % 2 === 0) {
-    drawTextOutlined('Space 또는 화면 탭으로 시작', BASE_W / 2, 350, 13, '#7FFF00');
+    drawTextOutlined(t('startHint'), BASE_W / 2, 350, 13, '#7FFF00');
   }
-  if (highScore > 0) drawTextOutlined(`최고 점수: ${highScore}`, BASE_W / 2, 390, 15, '#FFD700');
-  drawTextOutlined('← → 또는 A/D 키로 이동', BASE_W / 2, 430, 11, 'rgba(255,255,255,0.7)');
+  if (highScore > 0) drawTextOutlined(t('highScore', { n: highScore }), BASE_W / 2, 390, 15, '#FFD700');
+  drawTextOutlined(t('moveHint'), BASE_W / 2, 430, 11, 'rgba(255,255,255,0.7)');
 }
 
 function renderCharacterSelect() {
@@ -526,7 +642,7 @@ function renderCharacterSelect() {
   roundRect(20, 100, BASE_W - 40, BASE_H - 140, 16);
   ctx.fill();
 
-  drawTextOutlined('캐릭터 선택', BASE_W / 2, 135, 20, '#FFD700');
+  drawTextOutlined(t('charSelect'), BASE_W / 2, 135, 20, '#FFD700');
 
   for (let i = 0; i < CHARACTERS.length; i++) {
     const col = i % COLS;
@@ -553,7 +669,7 @@ function renderCharacterSelect() {
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillStyle = isSelected ? '#FFD700' : 'rgba(255,255,255,0.8)';
-    ctx.fillText(CHARACTERS[i].name, cx, cy + 26);
+    ctx.fillText(t(CHARACTERS[i].nameKey), cx, cy + 26);
 
     // Power icon badge
     if (CHARACTERS[i].power) {
@@ -570,17 +686,17 @@ function renderCharacterSelect() {
   ctx.fill();
 
   drawEmoji(ch.emoji, BASE_W / 2 - 58, GRID_Y + ROWS * CELL_H + 14 + boxH / 2, 28);
-  drawTextOutlined(ch.name, BASE_W / 2 + 12, GRID_Y + ROWS * CELL_H + 30, 14, '#FFD700');
-  drawTextOutlined(ch.label, BASE_W / 2 + 12, GRID_Y + ROWS * CELL_H + 48, 10, 'rgba(255,255,255,0.75)');
+  drawTextOutlined(t(ch.nameKey), BASE_W / 2 + 12, GRID_Y + ROWS * CELL_H + 30, 14, '#FFD700');
+  drawTextOutlined(t(ch.labelKey), BASE_W / 2 + 12, GRID_Y + ROWS * CELL_H + 48, 10, 'rgba(255,255,255,0.75)');
   if (ch.power) {
-    drawTextOutlined(`${ch.power.icon} 파워: ${ch.power.name}`, BASE_W / 2 + 12, GRID_Y + ROWS * CELL_H + 66, 10, '#88FFCC');
+    drawTextOutlined(t('powerLabel', { icon: ch.power.icon, name: t(ch.power.nameKey) }), BASE_W / 2 + 12, GRID_Y + ROWS * CELL_H + 66, 10, '#88FFCC');
   }
 
   const confirmY = GRID_Y + ROWS * CELL_H + boxH + 26;
   if (Math.floor(Date.now() / 500) % 2 === 0) {
-    drawTextOutlined('Space / Enter / 탭으로 선택 확정', BASE_W / 2, confirmY, 11, '#7FFF00');
+    drawTextOutlined(t('confirmHint'), BASE_W / 2, confirmY, 11, '#7FFF00');
   }
-  drawTextOutlined('← → ↑ ↓ 키 또는 클릭으로 이동', BASE_W / 2, confirmY + 18, 10, 'rgba(255,255,255,0.5)');
+  drawTextOutlined(t('selectMoveHint'), BASE_W / 2, confirmY + 18, 10, 'rgba(255,255,255,0.5)');
 }
 
 function renderGame() {
@@ -720,8 +836,8 @@ function renderGame() {
   roundRect(8, 8, 150, 44, 8);
   ctx.fill();
   drawEmoji(currentChar.emoji, 26, 30, 24);
-  drawTextOutlined(`점수: ${score}`,    100, 22, 14, '#fff');
-  drawTextOutlined(`최고: ${highScore}`, 100, 40, 11, '#FFD700');
+  drawTextOutlined(t('score', { n: score }), 100, 22, 14, '#fff');
+  drawTextOutlined(t('best', { n: highScore }), 100, 40, 11, '#FFD700');
 
   // Power button
   renderPowerButton();
@@ -737,7 +853,7 @@ function renderPowerButton() {
     ctx.beginPath(); ctx.arc(bx, by, br, 0, Math.PI * 2); ctx.fill();
     ctx.font = '8px monospace'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     ctx.fillStyle = 'rgba(150,150,150,0.6)';
-    ctx.fillText('파워없음', bx, by);
+    ctx.fillText(t('noPower'), bx, by);
     return;
   }
 
@@ -827,9 +943,9 @@ function renderPowerButton() {
   // Label under button
   ctx.font = '8px monospace'; ctx.textAlign = 'center'; ctx.textBaseline = 'top';
   ctx.fillStyle = 'rgba(200,200,200,0.7)';
-  let label = power.name;
-  if (power.type === 'eat')    label = powerState.storedPoops > 0 ? '뱉기' : (powerState.eatMode ? '대기중' : '먹기');
-  if (power.type === 'divine') label = isDivineOn ? '가호중' : power.name;
+  let label = t(power.nameKey);
+  if (power.type === 'eat')    label = powerState.storedPoops > 0 ? t('eatSpit') : (powerState.eatMode ? t('eatWaiting') : t('eatEat'));
+  if (power.type === 'divine') label = isDivineOn ? t('divineActive') : t(power.nameKey);
   ctx.fillText(label, bx, by + br + 2);
 
   // Key hint
@@ -849,20 +965,20 @@ function renderGameOver() {
   ctx.stroke();
 
   drawEmoji('😵', BASE_W / 2, 205, 44);
-  drawTextOutlined('게임 오버!', BASE_W / 2, 258, 24, '#FF6B6B');
-  drawTextOutlined(`${currentChar.emoji}  ${currentChar.name}`, BASE_W / 2, 290, 14, 'rgba(255,255,255,0.7)');
-  drawTextOutlined(`점수: ${score}`, BASE_W / 2, 320, 20, '#fff');
+  drawTextOutlined(t('gameOver'), BASE_W / 2, 258, 24, '#FF6B6B');
+  drawTextOutlined(`${currentChar.emoji}  ${t(currentChar.nameKey)}`, BASE_W / 2, 290, 14, 'rgba(255,255,255,0.7)');
+  drawTextOutlined(t('score', { n: score }), BASE_W / 2, 320, 20, '#fff');
 
   if (score >= highScore && score > 0) {
-    drawTextOutlined(`🏆 신기록! ${highScore}`, BASE_W / 2, 352, 15, '#FFD700');
+    drawTextOutlined(t('newRecord', { n: highScore }), BASE_W / 2, 352, 15, '#FFD700');
   } else {
-    drawTextOutlined(`최고 점수: ${highScore}`, BASE_W / 2, 352, 15, '#FFD700');
+    drawTextOutlined(t('highScore', { n: highScore }), BASE_W / 2, 352, 15, '#FFD700');
   }
 
   if (Math.floor(Date.now() / 600) % 2 === 0) {
-    drawTextOutlined('Space / 탭: 재도전', BASE_W / 2, 392, 12, '#7FFF00');
+    drawTextOutlined(t('retryHint'), BASE_W / 2, 392, 12, '#7FFF00');
   }
-  drawTextOutlined('C: 캐릭터 변경', BASE_W / 2, 415, 11, 'rgba(255,255,255,0.6)');
+  drawTextOutlined(t('changeCharHint'), BASE_W / 2, 415, 11, 'rgba(255,255,255,0.6)');
 }
 
 // ─── Input Handling ─────────────────────────────────────────────
@@ -963,3 +1079,6 @@ function loop(timestamp) {
 
 initGame();
 requestAnimationFrame(ts => { lastTime = ts; requestAnimationFrame(loop); });
+
+document.getElementById('lang-btn').addEventListener('click', toggleLang);
+applyLanguage();

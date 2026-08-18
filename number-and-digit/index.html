@@ -9,26 +9,27 @@
 <body>
 
   <div id="start-screen">
-    <a class="home-btn" href="../">🏠 홈</a>
-    <h1>수와 숫자</h1>
-    <p>범위 안에 수는 몇 개, 숫자는 몇 개인지 맞혀보세요</p>
+    <a class="home-btn" href="../" data-i18n="home">🏠 홈</a>
+    <button id="lang-btn" class="lang-btn" onclick="toggleLang()"></button>
+    <h1 data-i18n="title">수와 숫자</h1>
+    <p data-i18n="subtitle">범위 안에 수는 몇 개, 숫자는 몇 개인지 맞혀보세요</p>
 
     <div class="explain-box">
-      <div class="explain-row"><span class="explain-q">10에서 22까지의 수</span></div>
+      <div class="explain-row"><span class="explain-q" data-i18n="explainQuestion">10에서 22까지의 수</span></div>
       <div class="explain-row">
-        <span class="explain-item"><b>수</b>의 개수 = 22 - 10 + 1 = <b>13개</b></span>
-        <span class="explain-item"><b>숫자</b>의 개수 = 13 × 2 = <b>26개</b></span>
+        <span class="explain-item" data-i18n-html="explainNumbers"><b>수</b>의 개수 = 22 - 10 + 1 = <b>13개</b></span>
+        <span class="explain-item" data-i18n-html="explainDigits"><b>숫자</b>의 개수 = 13 × 2 = <b>26개</b></span>
       </div>
     </div>
 
     <div class="options">
       <label class="option-group">
-        최소값
+        <span data-i18n="minLabel">최소값</span>
         <input type="number" id="range-min" value="1" min="1" max="9999" inputmode="numeric" autocomplete="off">
       </label>
 
       <label class="option-group">
-        최대값
+        <span data-i18n="maxLabel">최대값</span>
         <input type="number" id="range-max" value="100" min="1" max="9999" inputmode="numeric" autocomplete="off">
       </label>
     </div>
@@ -45,6 +46,7 @@
       <div id="score" class="hidden">— / —</div>
       <div id="header-actions">
         <a class="home-btn" href="../">🏠</a>
+        <button id="lang-btn-game" class="lang-btn" onclick="toggleLang()"></button>
         <button id="submit-btn" onclick="submitAnswers()">Submit</button>
         <button id="reset-btn" class="hidden" onclick="reset()">Reset</button>
       </div>

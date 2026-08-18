@@ -9,9 +9,10 @@
 <body>
 
   <div id="start-screen">
-    <a class="home-btn" href="../">🏠 홈</a>
+    <a class="home-btn" href="../" data-i18n="home">🏠 홈</a>
+    <button id="lang-btn" class="lang-btn" onclick="toggleLang()"></button>
     <h1>Mad Minute</h1>
-    <p>3분 안에 50문제의 곱셈을 풀어보세요</p>
+    <p data-i18n="subtitle">3분 안에 50문제의 곱셈을 풀어보세요</p>
     <button id="start-btn" onclick="startGame()">Start</button>
   </div>
 
@@ -21,6 +22,7 @@
       <div id="score" class="hidden">— / 50</div>
       <div id="header-actions">
         <a class="home-btn" href="../">🏠</a>
+        <button id="lang-btn-game" class="lang-btn" onclick="toggleLang()"></button>
         <button id="submit-btn" onclick="submitAnswers()">Submit</button>
         <button id="reset-btn" class="hidden" onclick="reset()">Reset</button>
       </div>
